@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summarize</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>Summarize</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <h2>Summarization Page</h2>
+        <p>Provide the text you want to summarize below:</p>
+        <form method="POST" action="{{ url_for('summarize') }}">
+            <textarea name="text" rows="10" cols="50" placeholder="Enter text here..."></textarea>
+            <br>
+            <button type="submit" class="btn">Summarize</button>
+        </form>
+    </div>
+</body>
+</html>

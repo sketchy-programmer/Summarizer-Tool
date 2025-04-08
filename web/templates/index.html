@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortify - Instant Text Summaries & Paraphrasing</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-100 to-purple-100 min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <header class="text-center mb-12">
+            <div class="w-60 h-20 mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80">
+                  <!-- Background Rectangle with rounded corners -->
+                  <rect width="240" height="80" rx="12" fill="#4F46E5" />
+                  
+                  <!-- Text "Shortify" -->
+                  <text x="120" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="bold" text-anchor="middle" fill="white">Shortify</text>
+                  
+                  <!-- Scissors Icon -->
+                  <g transform="translate(30, 40) scale(0.7)">
+                    <path d="M25,35 Q17,35 13,29 Q9,23 13,16 Q17,9 25,9 Q33,9 37,16 Q41,23 37,29 Q33,35 25,35 Z" fill="#ffffff" opacity="0.8" />
+                    <path d="M75,35 Q67,35 63,29 Q59,23 63,16 Q67,9 75,9 Q83,9 87,16 Q91,23 87,29 Q83,35 75,35 Z" fill="#ffffff" opacity="0.8" />
+                    <path d="M25,25 L75,15" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+                    <path d="M25,15 L75,25" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+                  </g>
+                  
+                  <!-- Arrow indicating shortening -->
+                  <path d="M170,30 L200,30 M200,30 L190,24 M200,30 L190,36" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <p class="text-xl text-gray-600">Transform Long Texts into Concise Summaries & Perfect Paraphrases</p>
+        </header>
+
+        <div class="max-w-5xl mx-auto mb-16">
+            <!-- Hero Section -->
+            <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+                <div class="md:flex">
+                    <div class="md:w-1/2 p-8 md:p-12">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">Save Time & Enhance Your Content</h2>
+                        <p class="text-gray-600 mb-6">Our AI-powered tools help you quickly summarize and paraphrase text while maintaining the essential meaning. Perfect for students, writers, researchers, and professionals.</p>
+                        <div class="space-y-3">
+                            <a href="{{ url_for('register') }}" class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition text-center">
+                                Get Started Free
+                            </a>
+                            <a href="{{ url_for('login') }}" class="block w-full border border-blue-500 text-blue-500 py-3 px-6 rounded-lg hover:bg-blue-50 transition text-center">
+                                Login
+                            </a>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 bg-gradient-to-r from-blue-500 to-purple-600 p-8 md:p-12 text-white">
+                        <h3 class="text-2xl font-semibold mb-4">All-in-One Text Solution</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Powerful AI Summarization
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Smart Paraphrasing Tool
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Code Summarization
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Adjustable Length Controls
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Multiple Writing Styles
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Web & Desktop Applications
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="max-w-5xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Powerful Features</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Summarization -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-2">Smart Summarization</h3>
+                    <p class="text-gray-600 text-center">Condense long texts into concise, informative summaries that retain the key points.</p>
+                </div>
+                
+                <!-- Paraphrasing -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-2">Intelligent Paraphrasing</h3>
+                    <p class="text-gray-600 text-center">Rewrite content while preserving meaning, with multiple style options to match your needs.</p>
+                </div>
+                
+                <!-- Code Analyzer -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 mx-auto bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-10 h-10 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-2">Code Analyzer</h3>
+                    <p class="text-gray-600 text-center">Understand complex code snippets with plain-language explanations of functionality.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- How It Works Section -->
+        <div class="max-w-5xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">How It Works</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Web Tool -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4">Web Tool</h3>
+                    <ol class="space-y-4 pl-6 list-decimal">
+                        <li class="text-gray-700">
+                            <span class="font-medium">Sign up for a free account</span>
+                            <p class="text-gray-600 mt-1">Create your account in seconds to get started</p>
+                        </li>
+                        <li class="text-gray-700">
+                            <span class="font-medium">Paste your text</span>
+                            <p class="text-gray-600 mt-1">Insert the content you want to process</p>
+                        </li>
+                        <li class="text-gray-700">
+                            <span class="font-medium">Configure your settings</span>
+                            <p class="text-gray-600 mt-1">Choose action type, style, and length preferences</p>
+                        </li>
+                        <li class="text-gray-700">
+                            <span class="font-medium">Get instant results</span>
+                            <p class="text-gray-600 mt-1">Copy and use your summarized or paraphrased text</p>
+                        </li>
+                    </ol>
+                </div>
+                
+                <!-- Desktop App -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4">Desktop Application</h3>
+                    <ol class="space-y-4 pl-6 list-decimal">
+                        <li class="text-gray-700">
+                            <span class="font-medium">Download the app</span>
+                            <p class="text-gray-600 mt-1">Available for Windows, macOS, and Linux</p>
+                        </li>
+                        <li class="text-gray-700">
+                            <span class="font-medium">Select text anywhere</span>
+                            <p class="text-gray-600 mt-1">Highlight text in any application</p>
+                        </li>
+                        <li class="text-gray-700">
+                            <span class="font-medium">Right-click the floating pen</span>
+                            <p class="text-gray-600 mt-1">Choose summarize, paraphrase, or adjust settings</p>
+                        </li>
+                        <li class="text-gray-700">
+                            <span class="font-medium">View your results instantly</span>
+                            <p class="text-gray-600 mt-1">Results appear in a floating window</p>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pricing Section -->
+        <div class="max-w-4xl mx-auto text-center mb-16">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8">Simple, Transparent Pricing</h2>
+            
+            <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+                <div class="md:flex">
+                    <!-- Free Plan -->
+                    <div class="md:w-1/2 p-8 border-b md:border-b-0 md:border-r border-gray-200">
+                        <h3 class="text-2xl font-bold mb-2">Free</h3>
+                        <p class="text-gray-600 mb-6">Get started with basic features</p>
+                        <div class="text-4xl font-bold mb-6">$0</div>
+                        <ul class="space-y-3 text-left mb-8">
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Limited summarization
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Limited paraphrasing
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Web access only
+                            </li>
+                        </ul>
+                        <a href="{{ url_for('register') }}" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition">
+                            Sign Up Free
+                        </a>
+                    </div>
+                    
+                    <!-- Premium Plan -->
+                    <div class="md:w-1/2 p-8 bg-gray-50">
+                        <h3 class="text-2xl font-bold mb-2">Premium</h3>
+                        <p class="text-gray-600 mb-6">Full access to all features</p>
+                        <div class="text-4xl font-bold mb-6">$1.00</div>
+                        <ul class="space-y-3 text-left mb-8">
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Unlimited summarization
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Unlimited paraphrasing
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                All writing styles
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Desktop application
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Priority support
+                            </li>
+                        </ul>
+                        <a href="{{ url_for('register') }}" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition">
+                            Get Premium
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="max-w-5xl mx-auto text-center text-gray-600">
+            <p>© 2025 Shortify. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

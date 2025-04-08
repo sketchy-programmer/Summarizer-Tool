@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Links - AI Summarizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="flex items-center justify-center mb-6" style="padding-top: 1rem;">
+                <div class="w-40 h-14 mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80">
+                      <rect width="240" height="80" rx="12" fill="#4F46E5" />
+                      <text x="120" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="bold" text-anchor="middle" fill="white">Shortify</text>
+                      <g transform="translate(30, 40) scale(0.7)">
+                        <path d="M25,35 Q17,35 13,29 Q9,23 13,16 Q17,9 25,9 Q33,9 37,16 Q41,23 37,29 Q33,35 25,35 Z" fill="#ffffff" opacity="0.8" />
+                        <path d="M75,35 Q67,35 63,29 Q59,23 63,16 Q67,9 75,9 Q83,9 87,16 Q91,23 87,29 Q83,35 75,35 Z" fill="#ffffff" opacity="0.8" />
+                        <path d="M25,25 L75,15" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+                        <path d="M25,15 L75,25" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+                      </g>
+                      <path d="M170,30 L200,30 M200,30 L190,24 M200,30 L190,36" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h1 class="text-4xl font-bold text-gray-800">Download</h1>
+            </div>
+            <!-- Header with gradient -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white">
+                <h1 class="text-4xl font-bold mb-2">Download AI Summarizer</h1>
+                <p class="text-blue-100">Get started with your AI-powered summarization tool</p>
+            </div>
+            
+            <div class="p-8">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_premium %}
+                        <!-- Premium User Content -->
+                        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg mb-8 flex items-start">
+                            <div class="text-green-500 mr-3">
+                                <i class="fas fa-check-circle text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-green-800">Premium Access Confirmed</h3>
+                                <p class="text-green-700">Thank you for your support! Download your application below.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Highlight box for package contents -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8">
+                            <h3 class="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Package Contents
+                            </h3>
+                            <p class="text-gray-700 mb-3">Each download includes:</p>
+                            <ul class="text-gray-700 space-y-2 mb-3">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                    <span>Shortify application executable</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                    <span>Pre-configured API key (no setup required)</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                    <span>Installation & usage instructions</span>
+                                </li>
+                            </ul>
+                            <div class="text-sm text-gray-500 italic">
+                                Extract all files from the ZIP archive before running the application.
+                            </div>
+                        </div>
+                        
+                        <!-- Download options -->
+                        <div class="space-y-6">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4">Choose Your Platform</h2>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <!-- Windows download card -->
+                                <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                                    <div class="flex flex-col items-center text-center">
+                                        <div class="text-5xl text-blue-500 mb-4">
+                                            <i class="fab fa-windows"></i>
+                                        </div>
+                                        <h3 class="text-xl font-semibold mb-2">Windows</h3>
+                                        <p class="text-gray-500 mb-6 text-sm">Compatible with Windows 10 & 11</p>
+                                        <a href="{{ url_for('download_app_platform', platform='windows') }}" 
+                                           class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-lg transition flex items-center">
+                                            <i class="fas fa-download mr-2"></i>
+                                            Download (64MB)
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- macOS download card -->
+                                <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                                    <div class="flex flex-col items-center text-center">
+                                        <div class="text-5xl text-gray-700 mb-4">
+                                            <i class="fab fa-apple"></i>
+                                        </div>
+                                        <h3 class="text-xl font-semibold mb-2">macOS</h3>
+                                        <p class="text-gray-500 mb-6 text-sm">Compatible with macOS 11.0+</p>
+                                        <a href="{{ url_for('download_app_platform', platform='macos') }}" 
+                                           class="bg-gray-800 hover:bg-gray-900 text-white py-3 px-6 rounded-lg transition flex items-center">
+                                            <i class="fas fa-download mr-2"></i>
+                                            Download (68MB)
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Linux download option -->
+                            <div class="bg-white border border-gray-200 rounded-xl p-6 mt-4">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                    <div class="flex items-center mb-4 md:mb-0">
+                                        <div class="text-3xl text-gray-700 mr-4">
+                                            <i class="fab fa-linux"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-xl font-semibold">Linux</h3>
+                                            <p class="text-gray-500 text-sm">Ubuntu, Debian, Fedora & more</p>
+                                        </div>
+                                    </div>
+                                    <a href="{{ url_for('download_app_platform', platform='linux') }}" 
+                                       class="bg-gray-600 hover:bg-gray-700 text-white py-3 px-6 rounded-lg transition flex items-center justify-center">
+                                        <i class="fas fa-download mr-2"></i>
+                                        Download AppImage (62MB)
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Installation instructions -->
+                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 mt-6">
+                                <h3 class="text-xl font-semibold text-blue-800 mb-3">Installation Instructions</h3>
+                                <div class="space-y-3 text-gray-700">
+                                    <p><strong>Step 1:</strong> Download the ZIP file for your platform</p>
+                                    <p><strong>Step 2:</strong> Extract all contents of the ZIP archive to a folder</p>
+                                    <p><strong>Step 3:</strong> Make sure the executable and .env file are in the same folder</p>
+                                    <p><strong>Step 4:</strong> Run the Shortify application</p>
+                                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200 mt-2">
+                                        <p class="flex items-start">
+                                            <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                            <span><strong>Important:</strong> The application needs the .env file included in the ZIP to function properly. Do not delete it.</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Non-Premium User Content -->
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-8 flex items-start">
+                            <div class="text-yellow-500 mr-3">
+                                <i class="fas fa-lock text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-yellow-800">Premium Access Required</h3>
+                                <p class="text-yellow-700">Upgrade to premium to download the desktop application.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white border border-gray-200 rounded-xl p-8 text-center">
+                            <div class="max-w-md mx-auto">
+                                <img src="/api/placeholder/200/200" alt="Premium Features" class="mx-auto mb-6 rounded-full bg-blue-50 p-4">
+                                
+                                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Unlock Premium Features</h2>
+                                
+                                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                                    <div class="flex items-center justify-center">
+                                        <span class="text-3xl font-bold text-gray-800">$1.00</span>
+                                        <span class="ml-2 text-gray-500">one-time payment</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-2">Lifetime access to all premium features</p>
+                                </div>
+                                
+                                <form action="{{ url_for('create_checkout_session') }}" method="POST">
+                                    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-xl transition duration-300 shadow-lg hover:shadow-xl flex items-center justify-center">
+                                        <i class="fas fa-bolt mr-2"></i>
+                                        Upgrade to Premium
+                                    </button>
+                                </form>
+                                
+                                <div class="mt-6 text-gray-500">
+                                    <p>Get access to unlimited summarizations and our full-featured desktop application.</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <!-- Not Logged In -->
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-8 flex items-start">
+                        <div class="text-blue-500 mr-3">
+                            <i class="fas fa-info-circle text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-blue-800">Login Required</h3>
+                            <p class="text-blue-700">Please log in to access download options.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center py-8">
+                        <div class="text-6xl text-blue-400 mb-6">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-6">Access Your Account</h2>
+                        <a href="{{ url_for('login') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition inline-flex items-center">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Login
+                        </a>
+                        <p class="mt-4 text-gray-600">Don't have an account? <a href="{{ url_for('register') }}" class="text-blue-500 hover:underline">Register here</a></p>
+                    </div>
+                {% endif %}
+                
+                <!-- Back to home link -->
+                <div class="mt-8 text-center">
+                    <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center">
+                        <i class="fas fa-home mr-2"></i>
+                        <span>Back to Home</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

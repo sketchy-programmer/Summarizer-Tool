@@ -1,0 +1,4 @@
+.env/
+.flasksecretkey
+__pycache__
+*.env
