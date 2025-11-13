@@ -8,8 +8,10 @@ import openai
 import io
 import zipfile
 import tempfile
+from dotenv import load_dotenv
 
 app = Flask(__name__)
+load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shortify.db'
 app.config['STRIPE_PUBLIC_KEY'] = os.getenv('STRIPE_PUBLIC_KEY')
@@ -135,7 +137,7 @@ def api_summarize():
         
         client = openai.OpenAI(api_key=app.config['OPENAI_API_KEY'])
         response = client.chat.completions.create(
-            model="gpt-4.5-preview",
+            model="gpt-3.5-turbo",
             messages=[
                 {
                     "role": "system", 
@@ -194,7 +196,7 @@ def api_paraphrase():
         
         client = openai.OpenAI(api_key=app.config['OPENAI_API_KEY'])
         response = client.chat.completions.create(
-            model="gpt-4.5-preview",
+            model="gpt-3.5-turbo",
             messages=[
                 {
                     "role": "system", 
@@ -273,7 +275,7 @@ def api_code_summarize():
         
         client = openai.OpenAI(api_key=app.config['OPENAI_API_KEY'])
         response = client.chat.completions.create(
-            model="gpt-4.5-preview",
+            model="gpt-3.5-turbo",
             messages=[
                 {
                     "role": "system", 

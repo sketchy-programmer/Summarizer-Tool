@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import keyboard
 import pyperclip
 import math
+import sys
 from utils import resource_path
 from summarizer import summarize_text, paraphrase_text, summarize_code
 
@@ -28,30 +29,39 @@ class FloatingPen(tk.Tk):
         self.writing_style = "default"
         self.language = None  # Initialize language attribute
 
+        # Use transparent backgrounds on macOS
+        if sys.platform == "darwin":
+            bg_color = 'systemTransparent'
+        else:
+            bg_color = 'white'
+
         self.style = ttk.Style()
-        self.style.configure("Custom.TFrame", background='white')
+        self.style.configure("Custom.TFrame", background=bg_color)
 
         self.main_frame = ttk.Frame(self, style="Custom.TFrame")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        self.setup_pen_icon()
+        self.setup_pen_icon(bg_color)
         self.create_text_area()
         self.create_settings_panel()
         self.create_menu()
 
-        self.configure(bg='white')
+        self.configure(bg=bg_color)
         self.attributes('-alpha', 1.0)
-        self.attributes('-transparentcolor', 'white')
+        if sys.platform.startswith("win"):
+            self.attributes('-transparentcolor', 'white')
+        elif sys.platform == "darwin":
+            self.attributes('-transparent', True)
 
-    def setup_pen_icon(self):
+    def setup_pen_icon(self, bg_color):
         image_path = resource_path("assets/pen.png")
         self.pen_image = Image.open(image_path).convert("RGBA")
         self.original_pen_image = self.pen_image.copy()
         self.pen_image = self.pen_image.resize((100, 100), Image.Resampling.LANCZOS)
         self.pen_photo = ImageTk.PhotoImage(self.pen_image)
 
-        self.pen_label = tk.Label(self.main_frame, image=self.pen_photo, bg='white')
-        self.pen_label.pack(fill=tk.BOTH, expand=True)
+        self.pen_label = tk.Label(self.main_frame, image=self.pen_photo, bg=bg_color, borderwidth=0, highlightthickness=0)
+        self.pen_label.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
         self.pen_label.bind('<Enter>', self.on_hover_enter)
         self.pen_label.bind('<Leave>', self.on_hover_leave)
         self.pen_label.bind("<Button-3>", self.on_right_click)
