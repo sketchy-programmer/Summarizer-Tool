@@ -13,7 +13,11 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shortify.db'
+database_url = os.getenv('DATABASE_URL', 'sqlite:///shortify.db')
+# Heroku uses postgres:// but SQLAlchemy requires postgresql://
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['STRIPE_PUBLIC_KEY'] = os.getenv('STRIPE_PUBLIC_KEY')
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
 app.config['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
