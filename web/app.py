@@ -326,11 +326,11 @@ def download_app_platform(platform):
             exe_path = os.path.join(app.root_path, 'static', 'Shortify-Windows.exe')
             exe_filename = 'Shortify-Windows.exe'
         elif platform == 'macos':
-            exe_path = os.path.join(app.root_path, 'static', 'AISummarizer-MacOS')
+            exe_path = os.path.join(app.root_path, 'static', 'Shortify-MacOS')
             exe_filename = 'Shortify-MacOS'
         elif platform == 'linux':
-            exe_path = os.path.join(app.root_path, 'static', 'AISummarizer-Linux.AppImage')
-            exe_filename = 'Shortify-Linux.AppImage'
+            exe_path = os.path.join(app.root_path, 'static', 'Shortify-Linux')
+            exe_filename = 'Shortify-Linux'
         else:
             # Default to Windows if platform not specified
             exe_path = os.path.join(app.root_path, 'static', 'Shortify-Windows.exe')
