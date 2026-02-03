@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-import keyboard
 import pyperclip
 import math
 import sys
+import subprocess
+import time
 from utils import resource_path
 from summarizer import summarize_text, paraphrase_text, summarize_code
 
@@ -368,8 +369,29 @@ class FloatingPen(tk.Tk):
 
     def process_action(self, action_type):
         self.action_type = action_type
-        keyboard.send('ctrl+c')
-        self.after(200, self.process_clipboard_text)
+        previous_clip = pyperclip.paste()
+
+        # Platform-specific copy command
+        try:
+            if sys.platform == "darwin":
+                # macOS: use osascript to send Cmd+C
+                subprocess.run([
+                    "osascript", "-e",
+                    'tell application "System Events" to keystroke "c" using {command down}'
+                ], check=False)
+            elif sys.platform.startswith("win"):
+                # Windows: use keyboard library
+                import keyboard
+                keyboard.send('ctrl+c')
+            else:
+                # Linux: use xdotool
+                subprocess.run(["xdotool", "key", "ctrl+c"], check=False)
+        except Exception:
+            pass
+
+        # Store previous clipboard to detect change
+        self.previous_clip = previous_clip
+        self.after(300, self.process_clipboard_text)
 
     def process_clipboard_text(self):
         selected_text = pyperclip.paste()
