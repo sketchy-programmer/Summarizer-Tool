@@ -37,7 +37,7 @@ def summarize_text(text, max_length=150, min_length=100, style="default"):
 
         client = openai.OpenAI(api_key=API_KEY)
         response = client.chat.completions.create(
-            model="gpt-4.5-preview",
+            model="gpt-3.5-turbo",
             messages=[
                 {
                     "role": "system", 
@@ -84,7 +84,7 @@ def summarize_code(code, max_length=150, language=None):
         
         client = openai.OpenAI(api_key=API_KEY)
         response = client.chat.completions.create(
-            model="gpt-4.5-preview",
+            model="gpt-3.5-turbo",
             messages=[
                 {
                     "role": "system", 
@@ -136,7 +136,7 @@ def paraphrase_text(text, max_length=200, min_length=100, style="default"):
 
         client = openai.OpenAI(api_key=API_KEY)
         response = client.chat.completions.create(
-            model="gpt-4.5-preview",
+            model="gpt-3.5-turbo",
             messages=[
                 {
                     "role": "system", 

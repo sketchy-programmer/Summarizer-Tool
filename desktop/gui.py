@@ -1,533 +1,302 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-import keyboard
 import pyperclip
-import math
 import sys
+import subprocess
+import os
 from utils import resource_path
 from summarizer import summarize_text, paraphrase_text, summarize_code
+
 
 class FloatingPen(tk.Tk):
     def __init__(self):
         super().__init__()
 
         self.title("Shortify")
-        self.geometry("400x300")
-        self.overrideredirect(True)
-        self.attributes("-topmost", True)
-
-        # Animation-related attributes
-        self.hover_scale = 1.0
-        self.opacity = 1.0
-        self.fade_direction = -1
+        self.geometry("100x100")
+        self.overrideredirect(True)  # Remove window decorations
+        self.attributes("-topmost", True)  # Keep on top
 
         # Settings
-        self.action_type = "summarize"  # Default action
+        self.action_type = "summarize"
         self.min_length = 100
         self.max_length = 150
         self.writing_style = "default"
-        self.language = None  # Initialize language attribute
+        self.language = None
+        self.theme = "light"
 
-        # Use transparent backgrounds on macOS
-        if sys.platform == "darwin":
-            bg_color = 'systemTransparent'
-        else:
-            bg_color = 'white'
+        # Drag offset
+        self.offset_x = 0
+        self.offset_y = 0
 
-        self.style = ttk.Style()
-        self.style.configure("Custom.TFrame", background=bg_color)
+        # Configure background
+        self.configure(bg='#f0f0f0')
 
-        self.main_frame = ttk.Frame(self, style="Custom.TFrame")
+        # Main frame
+        self.main_frame = tk.Frame(self, bg='#f0f0f0')
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        self.setup_pen_icon(bg_color)
+        # Setup UI components
+        self.setup_pen_icon()
         self.create_text_area()
         self.create_settings_panel()
         self.create_menu()
 
-        self.configure(bg=bg_color)
-        self.attributes('-alpha', 1.0)
-        if sys.platform.startswith("win"):
-            self.attributes('-transparentcolor', 'white')
-        elif sys.platform == "darwin":
-            self.attributes('-transparent', True)
+    def setup_pen_icon(self):
+        """Setup the pen icon that users interact with."""
+        try:
+            image_path = resource_path("assets/pen.png")
+            self.pen_image = Image.open(image_path).convert("RGBA")
+            self.pen_image = self.pen_image.resize((80, 80), Image.Resampling.LANCZOS)
+            self.pen_photo = ImageTk.PhotoImage(self.pen_image)
 
-    def setup_pen_icon(self, bg_color):
-        image_path = resource_path("assets/pen.png")
-        self.pen_image = Image.open(image_path).convert("RGBA")
-        self.original_pen_image = self.pen_image.copy()
-        self.pen_image = self.pen_image.resize((100, 100), Image.Resampling.LANCZOS)
-        self.pen_photo = ImageTk.PhotoImage(self.pen_image)
+            self.pen_label = tk.Label(
+                self.main_frame,
+                image=self.pen_photo,
+                bg='#f0f0f0',
+                cursor="hand2"
+            )
+        except Exception as e:
+            # Fallback if image not found
+            self.pen_label = tk.Label(
+                self.main_frame,
+                text="✏️",
+                font=('Arial', 40),
+                bg='#f0f0f0',
+                cursor="hand2"
+            )
 
-        self.pen_label = tk.Label(self.main_frame, image=self.pen_photo, bg=bg_color, borderwidth=0, highlightthickness=0)
-        self.pen_label.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
-        self.pen_label.bind('<Enter>', self.on_hover_enter)
-        self.pen_label.bind('<Leave>', self.on_hover_leave)
-        self.pen_label.bind("<Button-3>", self.on_right_click)
+        self.pen_label.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Bind events
         self.pen_label.bind("<Button-1>", self.start_drag)
         self.pen_label.bind("<B1-Motion>", self.drag)
+        self.pen_label.bind("<Button-2>", self.on_right_click)  # macOS right-click
+        self.pen_label.bind("<Button-3>", self.on_right_click)  # Standard right-click
+        self.pen_label.bind("<Control-Button-1>", self.on_right_click)  # Ctrl+click on macOS
 
     def create_text_area(self):
+        """Create the expandable text area for results."""
+        self.text_frame = tk.Frame(self.main_frame, bg='#f5f5f5')
+
         self.text_area = tk.Text(
-            self.main_frame,
-            height=15,
-            width=50,
+            self.text_frame,
+            height=12,
+            width=45,
             wrap=tk.WORD,
-            font=('Helvetica', 12),
+            font=('Helvetica', 11),
             bg='#f5f5f5',
             fg='#333333',
             padx=10,
             pady=10,
             relief="flat",
-            borderwidth=1,  # Add a thin border for visibility
-            insertbackground='#333333'  # Add a cursor color
+            borderwidth=1
         )
-        # Add a vertical scrollbar to the text area
-        text_scroll = ttk.Scrollbar(self.main_frame, orient="vertical", command=self.text_area.yview)
-        self.text_area.configure(yscrollcommand=text_scroll.set)
-        
-        # The scrollbar and text area will be packed together when needed
-        self.text_scroll = text_scroll
-        self.text_area.pack_forget()
+
+        self.text_scroll = ttk.Scrollbar(
+            self.text_frame,
+            orient="vertical",
+            command=self.text_area.yview
+        )
+        self.text_area.configure(yscrollcommand=self.text_scroll.set)
+
+        # Don't pack yet - will show when needed
 
     def create_settings_panel(self):
-        # Create a frame that will contain settings
-        self.settings_frame = ttk.Frame(self.main_frame)
-        self.settings_frame.pack_forget()
-        
-        # Create a canvas with scrollbar for settings
-        self.settings_canvas = tk.Canvas(self.settings_frame, borderwidth=0, highlightthickness=0, background='#f5f5f5')
-        self.settings_scrollbar = ttk.Scrollbar(self.settings_frame, orient="vertical", command=self.settings_canvas.yview)
-        self.settings_inner_frame = ttk.Frame(self.settings_canvas, style="Settings.TFrame")
-        
-        # Configure style for the inner frame
-        self.style.configure("Settings.TFrame", background='#f5f5f5')
-        
-        # Configure the inner frame to expand to the canvas size
-        self.settings_inner_frame.bind(
-            "<Configure>",
-            lambda e: self.settings_canvas.configure(scrollregion=self.settings_canvas.bbox("all"))
-        )
-        
-        # Mouse wheel binding for scrolling
-        def _on_mousewheel(event):
-            self.settings_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        
-        self.settings_canvas.bind_all("<MouseWheel>", _on_mousewheel)
-        
-        # Create window inside canvas
-        self.settings_canvas.create_window((0, 0), window=self.settings_inner_frame, anchor="nw")
-        self.settings_canvas.configure(yscrollcommand=self.settings_scrollbar.set)
-        
-        # Set minimum size for canvas
-        self.settings_canvas.config(width=300, height=250)
-        
-        # Configure styles for dropdown and entry fields
-        self.style.configure("TCombobox", fieldbackground='white', background='white')
-        self.style.map('TCombobox', fieldbackground=[('readonly', 'white')])
-        self.style.configure("TEntry", fieldbackground='white', background='white')
-        
-        # Action Type Selection
-        ttk.Label(self.settings_inner_frame, text="Action:", background='#f5f5f5', foreground='#333333').grid(row=0, column=0, sticky="w", pady=2, padx=5)
+        """Create the settings panel."""
+        self.settings_frame = tk.Frame(self.main_frame, bg='#f5f5f5')
+
+        # Action Type
+        tk.Label(self.settings_frame, text="Action:", bg='#f5f5f5').grid(row=0, column=0, sticky="w", pady=5, padx=10)
         self.action_var = tk.StringVar(value="summarize")
-        action_options = ["summarize", "paraphrase", "code_summarize"]
-        
-        self.action_combobox = ttk.Combobox(
-            self.settings_inner_frame, 
+        action_combo = ttk.Combobox(
+            self.settings_frame,
             textvariable=self.action_var,
-            values=action_options,
+            values=["summarize", "paraphrase", "code_summarize"],
             state="readonly",
-            width=15,
-            style="TCombobox"
+            width=15
         )
-        self.action_combobox.grid(row=0, column=1, sticky="ew", pady=2, padx=5)
-        
-        # Code Language Selection (only visible for code summarization)
-        ttk.Label(self.settings_inner_frame, text="Language:", background='#f5f5f5', foreground='#333333').grid(row=1, column=0, sticky="w", pady=2, padx=5)
-        self.language_var = tk.StringVar(value="auto-detect")
-        language_options = ["auto-detect", "python", "javascript", "java", "c++", "c#", "go", "ruby", "php", "swift", "typescript", "rust", "kotlin", "sql"]
-        
-        self.language_combobox = ttk.Combobox(
-            self.settings_inner_frame, 
-            textvariable=self.language_var,
-            values=language_options,
-            state="readonly",
-            width=15,
-            style="TCombobox"
-        )
-        self.language_combobox.grid(row=1, column=1, sticky="ew", pady=2, padx=5)
-        
-        # Writing Style Selection
-        ttk.Label(self.settings_inner_frame, text="Style:", background='#f5f5f5', foreground='#333333').grid(row=2, column=0, sticky="w", pady=2, padx=5)
+        action_combo.grid(row=0, column=1, pady=5, padx=10)
+
+        # Style
+        tk.Label(self.settings_frame, text="Style:", bg='#f5f5f5').grid(row=1, column=0, sticky="w", pady=5, padx=10)
         self.style_var = tk.StringVar(value="default")
-        style_options = ["default", "academic", "casual", "business", "creative"]
-        
-        self.style_combobox = ttk.Combobox(
-            self.settings_inner_frame, 
+        style_combo = ttk.Combobox(
+            self.settings_frame,
             textvariable=self.style_var,
-            values=style_options,
+            values=["default", "academic", "casual", "business", "creative"],
             state="readonly",
-            width=15,
-            style="TCombobox"
+            width=15
         )
-        self.style_combobox.grid(row=2, column=1, sticky="ew", pady=2, padx=5)
-        
-        # Bind action change to update UI
-        self.action_combobox.bind("<<ComboboxSelected>>", self.on_action_change)
-        
-        # Length Controls
-        ttk.Label(self.settings_inner_frame, text="Min Length:", background='#f5f5f5', foreground='#333333').grid(row=3, column=0, sticky="w", pady=2, padx=5)
+        style_combo.grid(row=1, column=1, pady=5, padx=10)
+
+        # Min Length
+        tk.Label(self.settings_frame, text="Min Length:", bg='#f5f5f5').grid(row=2, column=0, sticky="w", pady=5, padx=10)
         self.min_length_var = tk.StringVar(value="100")
-        self.min_length_entry = ttk.Entry(
-            self.settings_inner_frame, 
-            textvariable=self.min_length_var,
-            width=7,
-            style="TEntry"
-        )
-        self.min_length_entry.grid(row=3, column=1, sticky="w", pady=2, padx=5)
-        
-        ttk.Label(self.settings_inner_frame, text="Max Length:", background='#f5f5f5', foreground='#333333').grid(row=4, column=0, sticky="w", pady=2, padx=5)
+        min_entry = ttk.Entry(self.settings_frame, textvariable=self.min_length_var, width=10)
+        min_entry.grid(row=2, column=1, sticky="w", pady=5, padx=10)
+
+        # Max Length
+        tk.Label(self.settings_frame, text="Max Length:", bg='#f5f5f5').grid(row=3, column=0, sticky="w", pady=5, padx=10)
         self.max_length_var = tk.StringVar(value="150")
-        self.max_length_entry = ttk.Entry(
-            self.settings_inner_frame, 
-            textvariable=self.max_length_var,
-            width=7,
-            style="TEntry"
-        )
-        self.max_length_entry.grid(row=4, column=1, sticky="w", pady=2, padx=5)
-        
-        # Theme Selection
-        ttk.Label(self.settings_inner_frame, text="Theme:", background='#f5f5f5', foreground='#333333').grid(row=5, column=0, sticky="w", pady=2, padx=5)
-        self.theme_var = tk.StringVar(value="light")
-        theme_options = ["light", "dark"]
-        
-        self.theme_combobox = ttk.Combobox(
-            self.settings_inner_frame, 
-            textvariable=self.theme_var,
-            values=theme_options,
-            state="readonly",
-            width=15,
-            style="TCombobox"
-        )
-        self.theme_combobox.grid(row=5, column=1, sticky="ew", pady=2, padx=5)
-        self.theme_combobox.bind("<<ComboboxSelected>>", self.on_theme_change)
-        
-        # Apply Button
-        self.apply_button = ttk.Button(
-            self.settings_inner_frame,
-            text="Apply",
-            command=self.apply_settings
-        )
-        self.apply_button.grid(row=6, column=0, columnspan=2, pady=10, padx=5)
-        
-        # Add some extra space at the bottom to ensure all content is visible
-        ttk.Label(self.settings_inner_frame, text="", background='#f5f5f5').grid(row=7, column=0, pady=10)
-        
-        # Pack canvas and scrollbar
-        self.settings_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-        self.settings_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # Initial UI state setup
-        self.on_action_change(None)
+        max_entry = ttk.Entry(self.settings_frame, textvariable=self.max_length_var, width=10)
+        max_entry.grid(row=3, column=1, sticky="w", pady=5, padx=10)
 
-    def on_action_change(self, event):
-        """Update UI based on selected action"""
-        action = self.action_var.get()
-        
-        # Show/hide language selection for code summarization
-        if action == "code_summarize":
-            self.language_combobox.grid(row=1, column=1, sticky="ew", pady=2)
-            self.style_combobox.grid_remove()
-            self.min_length_entry.grid_remove()
-        else:
-            self.language_combobox.grid_remove()
-            self.style_combobox.grid(row=2, column=1, sticky="ew", pady=2)
-            self.min_length_entry.grid(row=3, column=1, sticky="w", pady=2)
-            
-    def on_theme_change(self, event):
-        """Update UI colors based on selected theme"""
-        theme = self.theme_var.get()
-        
-        # Update setting panel colors
-        bg_color = '#1e1e1e' if theme == 'dark' else '#f5f5f5'
-        fg_color = '#ffffff' if theme == 'dark' else '#333333'
-        
-        # Update canvas background
-        self.settings_canvas.config(background=bg_color)
-        
-        # Update frame background
-        self.style.configure("Settings.TFrame", background=bg_color)
-        
-        # Update labels
-        for child in self.settings_inner_frame.winfo_children():
-            if isinstance(child, ttk.Label):
-                child.configure(background=bg_color, foreground=fg_color)
-        
-        # When in dark mode, ensure comboboxes and entries have white background
-        # to make text readable
-        if theme == "dark":
-            self.style.configure("TCombobox", fieldbackground='white', foreground='black')
-            self.style.map('TCombobox', fieldbackground=[('readonly', 'white')])
-            self.style.configure("TEntry", fieldbackground='white', foreground='black')
-        else:
-            self.style.configure("TCombobox", fieldbackground='white', foreground='black')
-            self.style.map('TCombobox', fieldbackground=[('readonly', 'white')])
-            self.style.configure("TEntry", fieldbackground='white', foreground='black')
-        
-        # Update text area colors
-        if theme == "dark":
-            # Dark theme
-            self.text_area.configure(
-                bg='#1e1e1e',  # Dark background
-                fg='#ffffff',  # White text
-                insertbackground='#ffffff'  # White cursor
-            )
-            # Add a white border for visibility in dark mode
-            self.text_area.configure(borderwidth=1, relief="solid")
-        else:
-            # Light theme
-            self.text_area.configure(
-                bg='#f5f5f5',  # Light background
-                fg='#333333',  # Dark text
-                insertbackground='#333333'  # Dark cursor
-            )
-            self.text_area.configure(borderwidth=1, relief="flat")
-
-    def apply_settings(self):
-        # Update settings based on user input
-        try:
-            self.action_type = self.action_var.get()
-            
-            if self.action_type == "code_summarize":
-                self.max_length = int(self.max_length_var.get())
-                self.language = self.language_var.get()
-                if self.language == "auto-detect":
-                    self.language = None
-            else:
-                self.min_length = int(self.min_length_var.get())
-                self.max_length = int(self.max_length_var.get())
-                self.writing_style = self.style_var.get()
-                
-                # Validate settings
-                if self.min_length < 50:
-                    self.min_length = 50
-                    self.min_length_var.set("50")
-                
-                if self.max_length < self.min_length:
-                    self.max_length = self.min_length + 50
-                    self.max_length_var.set(str(self.max_length))
-            
-            # Apply theme change
-            self.on_theme_change(None)
-                
-            # Hide settings panel
-            self.settings_frame.pack_forget()
-            self.geometry("100x100")  # Return to icon size
-            
-        except ValueError:
-            self.show_error("Please enter valid numbers for length")
+        # Apply button
+        apply_btn = ttk.Button(self.settings_frame, text="Apply", command=self.apply_settings)
+        apply_btn.grid(row=4, column=0, columnspan=2, pady=15)
 
     def create_menu(self):
+        """Create the right-click context menu."""
         self.menu = tk.Menu(self, tearoff=0)
-        self.menu.configure(font=('Helvetica', 10), bg='#ffffff', fg='#333333', relief="flat")
         self.menu.add_command(label="✨ Summarize", command=lambda: self.process_action("summarize"))
         self.menu.add_command(label="🔁 Paraphrase", command=lambda: self.process_action("paraphrase"))
         self.menu.add_command(label="💻 Code Summarize", command=lambda: self.process_action("code_summarize"))
+        self.menu.add_separator()
         self.menu.add_command(label="⚙️ Settings", command=self.show_settings)
-        self.menu.add_command(label="🎯 Hide", command=self.hide_text_area)
-        self.menu.add_command(label="❌ Cancel", command=self.cancel_action)
-        self.menu.add_command(label="🚫 Stop", command=self.stop_application)
+        self.menu.add_command(label="🎯 Hide Result", command=self.hide_panels)
+        self.menu.add_separator()
+        self.menu.add_command(label="❌ Quit", command=self.destroy)
 
-    def show_settings(self):
-        # Show settings panel
-        self.text_area.pack_forget()
-        self.text_scroll.pack_forget()
-        
-        # Update canvas background color based on theme
-        theme = self.theme_var.get()
-        bg_color = '#1e1e1e' if theme == 'dark' else '#f5f5f5'
-        fg_color = '#ffffff' if theme == 'dark' else '#333333'
-        
-        # Update canvas and labels colors
-        self.settings_canvas.config(background=bg_color)
-        for child in self.settings_inner_frame.winfo_children():
-            if isinstance(child, ttk.Label):
-                child.configure(background=bg_color, foreground=fg_color)
-        
-        # Show settings with adjusted size
-        self.settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        self.geometry("350x350")  # Increased height for better visibility
-        
-        # Ensure the canvas is scrolled to the top
-        self.settings_canvas.yview_moveto(0.0)
-        
-        # Update scrollbar now that content is visible
-        self.settings_canvas.update_idletasks()
-        self.settings_canvas.configure(scrollregion=self.settings_canvas.bbox("all"))
+    def on_right_click(self, event):
+        """Show context menu on right-click."""
+        try:
+            self.menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.menu.grab_release()
+
+    def start_drag(self, event):
+        """Start dragging the window."""
+        self.offset_x = event.x
+        self.offset_y = event.y
+
+    def drag(self, event):
+        """Drag the window."""
+        x = self.winfo_pointerx() - self.offset_x
+        y = self.winfo_pointery() - self.offset_y
+        self.geometry(f"+{x}+{y}")
 
     def process_action(self, action_type):
+        """Process the selected action."""
         self.action_type = action_type
-        keyboard.send('ctrl+c')
-        self.after(200, self.process_clipboard_text)
 
-    def process_clipboard_text(self):
-        selected_text = pyperclip.paste()
-        if selected_text.strip():
+        # Try to copy selected text on macOS
+        if sys.platform == "darwin":
+            try:
+                subprocess.run([
+                    "osascript", "-e",
+                    'tell application "System Events" to keystroke "c" using {command down}'
+                ], check=False, timeout=1)
+                self.after(300, self.process_clipboard)
+            except Exception:
+                self.after(100, self.process_clipboard)
+        else:
+            self.after(100, self.process_clipboard)
+
+    def process_clipboard(self):
+        """Process text from clipboard."""
+        try:
+            selected_text = pyperclip.paste()
+        except Exception as e:
+            self.show_result(f"Clipboard Error: {str(e)}")
+            return
+
+        if not selected_text or not selected_text.strip():
+            self.show_result("No text in clipboard!\n\nCopy some text first (Cmd+C), then try again.")
+            return
+
+        # Show processing message
+        self.show_result("Processing...")
+        self.update()
+
+        # Process based on action type
+        try:
             if self.action_type == "summarize":
                 result = summarize_text(
-                    selected_text, 
+                    selected_text,
                     max_length=self.max_length,
                     min_length=self.min_length,
                     style=self.writing_style
                 )
-                title = f"Summary ({self.writing_style} style)"
+                title = f"📝 Summary ({self.writing_style})"
             elif self.action_type == "paraphrase":
                 result = paraphrase_text(
-                    selected_text, 
+                    selected_text,
                     max_length=self.max_length,
                     min_length=self.min_length,
                     style=self.writing_style
                 )
-                title = f"Paraphrase ({self.writing_style} style)"
+                title = f"🔄 Paraphrase ({self.writing_style})"
             else:  # code_summarize
-                language_display = self.language if self.language else "auto-detected"
                 result = summarize_code(
-                    selected_text, 
+                    selected_text,
                     max_length=self.max_length,
                     language=self.language
                 )
-                title = f"Code Summary ({language_display})"
-            
-            # Animate text area appearance
-            self.geometry("450x350")  # Make the window a bit larger for scrollbar
-            
-            # Pack text area and scrollbar
-            self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-            self.text_scroll.pack(side=tk.RIGHT, fill=tk.Y, pady=5)
-            
-            self.text_area.delete(1.0, tk.END)
-            
-            # Add title
-            self.text_area.insert(tk.END, f"{title}:\n\n", "title")
-            self.text_area.tag_configure("title", font=("Helvetica", 12, "bold"))
-            
-            # Animate text insertion
-            self.animate_text_insertion(result)
-        else:
-            self.show_error("No text selected!")
+                title = "💻 Code Summary"
 
-    def animate_text_insertion(self, text):
-        """Animate text insertion character by character."""
-        def insert_char(idx=0):
-            if idx < len(text):
-                self.text_area.insert(tk.END, text[idx])
-                self.after(20, lambda: insert_char(idx + 1))
-        
-        insert_char()
+            self.show_result(f"{title}:\n\n{result}")
 
-    def show_message(self):
-        # For backward compatibility
-        self.process_action("summarize")
+        except Exception as e:
+            self.show_result(f"Error: {str(e)}")
 
-    def show_error(self, message):
-        # Configure text area colors based on theme
-        theme = getattr(self, 'theme_var', tk.StringVar(value="light")).get()
-        
-        if theme == "dark":
-            bg_color = "#1e1e1e"
-            fg_color = "#ffffff"
-        else:
-            bg_color = "#f5f5f5"
-            fg_color = "#333333"
-        
-        self.geometry("400x300")
-        self.text_area.configure(bg=bg_color, fg=fg_color)
-        self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-        self.text_scroll.pack(side=tk.RIGHT, fill=tk.Y, pady=5)
+    def show_result(self, text):
+        """Show the result in the expandable text area."""
+        # Hide settings if visible
+        self.settings_frame.pack_forget()
+
+        # Show text area
+        self.text_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.text_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Resize window
+        self.geometry("400x350")
+
+        # Insert text
         self.text_area.delete(1.0, tk.END)
-        self.text_area.insert(tk.END, f"Error: {message}", "error")
-        self.text_area.tag_configure("error", foreground="#ff0000", font=("Helvetica", 12, "bold"))
+        self.text_area.insert(tk.END, text)
 
-    def on_right_click(self, event):
-        self.menu.post(event.x_root, event.y_root)
+    def show_settings(self):
+        """Show the settings panel."""
+        # Hide text area
+        self.text_frame.pack_forget()
 
-    def start_drag(self, event):
-        global offset_x, offset_y
-        offset_x = event.x
-        offset_y = event.y
+        # Show settings
+        self.settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-    def drag(self, event):
-        x = self.winfo_pointerx() - offset_x
-        y = self.winfo_pointery() - offset_y
-        self.geometry(f"+{x}+{y}")
+        # Resize window
+        self.geometry("280x220")
 
-    def cancel_action(self):
-        self.menu.unpost()
+    def apply_settings(self):
+        """Apply settings and hide panel."""
+        try:
+            self.action_type = self.action_var.get()
+            self.writing_style = self.style_var.get()
+            self.min_length = int(self.min_length_var.get())
+            self.max_length = int(self.max_length_var.get())
 
-    def hide_text_area(self):
-        # Animate text area disappearance
-        def fade_out(alpha=1.0):
-            if alpha > 0:
-                self.text_area.configure(bg=self.blend_colors('#f5f5f5', 'white', alpha))
-                self.after(20, lambda: fade_out(alpha - 0.1))
-            else:
-                self.text_area.pack_forget()
-                self.text_scroll.pack_forget()
-                self.settings_frame.pack_forget()
-                self.geometry("100x100")
-        
-        fade_out()
+            # Validation
+            if self.min_length < 50:
+                self.min_length = 50
+                self.min_length_var.set("50")
+            if self.max_length < self.min_length:
+                self.max_length = self.min_length + 50
+                self.max_length_var.set(str(self.max_length))
 
-    def stop_application(self):
-        # Animate application closure
-        def fade_out(alpha=1.0):
-            if alpha > 0:
-                self.attributes('-alpha', alpha)
-                self.after(20, lambda: fade_out(alpha - 0.1))
-            else:
-                self.destroy()
-        
-        fade_out()
+        except ValueError:
+            pass
 
-    def blend_colors(self, color1, color2, ratio):
-        """Helper method to blend two colors."""
-        def parse_color(color):
-            # Handle named colors and hex colors
-            color_map = {
-                'white': '#FFFFFF',
-                'black': '#000000',
-                'red': '#FF0000',
-                # Add more named colors as needed
-            }
-            
-            # Use the color map if it's a named color
-            if color.lower() in color_map:
-                color = color_map[color.lower()]
-            
-            # Remove hash if present
-            color = color.lstrip('#')
-            
-            # Pad with zeros if needed
-            color = color.zfill(6)
-            
-            return tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+        self.hide_panels()
 
-        r1, g1, b1 = parse_color(color1)
-        r2, g2, b2 = parse_color(color2)
-        
-        r = int(r1 * ratio + r2 * (1 - ratio))
-        g = int(g1 * ratio + g2 * (1 - ratio))
-        b = int(b1 * ratio + b2 * (1 - ratio))
-        
-        return f'#{r:02x}{g:02x}{b:02x}'
+    def hide_panels(self):
+        """Hide all panels and return to icon view."""
+        self.text_frame.pack_forget()
+        self.settings_frame.pack_forget()
+        self.geometry("100x100")
 
-    def on_hover_enter(self, event):
-        """Handle hover enter event with scaling animation."""
-        self.hover_scale = 1.1
-        self.fade_direction = 1
 
-    def on_hover_leave(self, event):
-        """Handle hover leave event with scaling animation."""
-        self.hover_scale = 1.0
-        self.fade_direction = -1
+if __name__ == "__main__":
+    app = FloatingPen()
+    app.mainloop()

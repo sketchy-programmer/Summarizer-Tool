@@ -13,7 +13,11 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shortify.db'
+database_url = os.getenv('DATABASE_URL', 'sqlite:///shortify.db')
+# Heroku uses postgres:// but SQLAlchemy requires postgresql://
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['STRIPE_PUBLIC_KEY'] = os.getenv('STRIPE_PUBLIC_KEY')
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
 app.config['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
@@ -322,11 +326,11 @@ def download_app_platform(platform):
             exe_path = os.path.join(app.root_path, 'static', 'Shortify-Windows.exe')
             exe_filename = 'Shortify-Windows.exe'
         elif platform == 'macos':
-            exe_path = os.path.join(app.root_path, 'static', 'AISummarizer-MacOS')
+            exe_path = os.path.join(app.root_path, 'static', 'Shortify-MacOS')
             exe_filename = 'Shortify-MacOS'
         elif platform == 'linux':
-            exe_path = os.path.join(app.root_path, 'static', 'AISummarizer-Linux.AppImage')
-            exe_filename = 'Shortify-Linux.AppImage'
+            exe_path = os.path.join(app.root_path, 'static', 'Shortify-Linux')
+            exe_filename = 'Shortify-Linux'
         else:
             # Default to Windows if platform not specified
             exe_path = os.path.join(app.root_path, 'static', 'Shortify-Windows.exe')
@@ -383,10 +387,8 @@ For help or issues, please contact support@shortify.app
         mimetype='application/zip'
     )
 
-def initialize_database():
-    with app.app_context():
-        db.create_all()
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
-    initialize_database()
     app.run(debug=True)

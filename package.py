@@ -2,10 +2,11 @@ import os
 import subprocess
 import platform
 import shutil
+import sys
 
 def create_virtual_environment():
     """Create a virtual environment for packaging."""
-    subprocess.run(['python', '-m', 'venv', 'venv'], check=True)
+    subprocess.run([sys.executable, '-m', 'venv', 'venv'], check=True)
 
 def install_dependencies():
     """Install dependencies in the virtual environment."""
