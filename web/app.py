@@ -383,10 +383,8 @@ For help or issues, please contact support@shortify.app
         mimetype='application/zip'
     )
 
-def initialize_database():
-    with app.app_context():
-        db.create_all()
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
-    initialize_database()
     app.run(debug=True)
