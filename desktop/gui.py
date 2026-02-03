@@ -4,7 +4,6 @@ import pyperclip
 import sys
 import subprocess
 from summarizer import summarize_text, paraphrase_text, summarize_code
-from config import get_api_key
 
 class FloatingPen(tk.Tk):
     def __init__(self):
