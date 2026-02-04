@@ -114,21 +114,30 @@ class FloatingPen(tk.Tk):
 
     def setup_pen_icon(self):
         """Setup the pen icon."""
-        try:
-            image_path = resource_path("assets/pen.png")
-            self.pen_image = Image.open(image_path).convert("RGBA")
-            self.pen_image = self.pen_image.resize((70, 70), Image.Resampling.LANCZOS)
-            self.pen_photo = ImageTk.PhotoImage(self.pen_image)
+        image_path = resource_path("assets/pen.png")
+        print(f"Looking for pen.png at: {image_path}")
+        print(f"File exists: {os.path.exists(image_path)}")
 
-            self.pen_label = tk.Label(
-                self.main_frame,
-                image=self.pen_photo,
-                bg=self.transparent_color,
-                borderwidth=0,
-                highlightthickness=0,
-                cursor="hand2"
-            )
-        except Exception:
+        try:
+            if os.path.exists(image_path):
+                self.pen_image = Image.open(image_path).convert("RGBA")
+                self.pen_image = self.pen_image.resize((70, 70), Image.Resampling.LANCZOS)
+                self.pen_photo = ImageTk.PhotoImage(self.pen_image)
+
+                self.pen_label = tk.Label(
+                    self.main_frame,
+                    image=self.pen_photo,
+                    bg=self.transparent_color,
+                    borderwidth=0,
+                    highlightthickness=0,
+                    cursor="hand2"
+                )
+                print("Pen image loaded successfully!")
+            else:
+                raise FileNotFoundError(f"pen.png not found at {image_path}")
+        except Exception as e:
+            print(f"Error loading pen image: {e}")
+            # Fallback to emoji
             self.pen_label = tk.Label(
                 self.main_frame,
                 text="✏️",
