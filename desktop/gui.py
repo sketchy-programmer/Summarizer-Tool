@@ -14,7 +14,7 @@ class FloatingPen(tk.Tk):
         super().__init__()
 
         self.title("Shortify")
-        self.geometry("100x100")
+        self.geometry("80x80")
         self.overrideredirect(True)  # Remove window decorations
         self.attributes("-topmost", True)  # Keep on top
 
@@ -30,11 +30,23 @@ class FloatingPen(tk.Tk):
         self.offset_x = 0
         self.offset_y = 0
 
-        # Configure background
-        self.configure(bg='#f0f0f0')
+        # Transparent background color (will be made transparent)
+        self.transparent_color = '#010101'
+
+        # Configure background for transparency
+        self.configure(bg=self.transparent_color)
+
+        # Enable transparency on macOS
+        if sys.platform == "darwin":
+            self.attributes('-transparent', True)
+            self.config(bg='systemTransparent')
+            self.transparent_color = 'systemTransparent'
+        else:
+            # Windows transparency
+            self.attributes('-transparentcolor', self.transparent_color)
 
         # Main frame
-        self.main_frame = tk.Frame(self, bg='#f0f0f0')
+        self.main_frame = tk.Frame(self, bg=self.transparent_color)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Setup UI components
@@ -48,13 +60,15 @@ class FloatingPen(tk.Tk):
         try:
             image_path = resource_path("assets/pen.png")
             self.pen_image = Image.open(image_path).convert("RGBA")
-            self.pen_image = self.pen_image.resize((80, 80), Image.Resampling.LANCZOS)
+            self.pen_image = self.pen_image.resize((70, 70), Image.Resampling.LANCZOS)
             self.pen_photo = ImageTk.PhotoImage(self.pen_image)
 
             self.pen_label = tk.Label(
                 self.main_frame,
                 image=self.pen_photo,
-                bg='#f0f0f0',
+                bg=self.transparent_color,
+                borderwidth=0,
+                highlightthickness=0,
                 cursor="hand2"
             )
         except Exception as e:
@@ -63,11 +77,11 @@ class FloatingPen(tk.Tk):
                 self.main_frame,
                 text="✏️",
                 font=('Arial', 40),
-                bg='#f0f0f0',
+                bg=self.transparent_color,
                 cursor="hand2"
             )
 
-        self.pen_label.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.pen_label.pack(fill=tk.BOTH, expand=True)
 
         # Bind events
         self.pen_label.bind("<Button-1>", self.start_drag)
@@ -246,6 +260,10 @@ class FloatingPen(tk.Tk):
         # Hide settings if visible
         self.settings_frame.pack_forget()
 
+        # Disable transparency for readable content
+        self.config(bg='#f5f5f5')
+        self.main_frame.config(bg='#f5f5f5')
+
         # Show text area
         self.text_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -262,6 +280,10 @@ class FloatingPen(tk.Tk):
         """Show the settings panel."""
         # Hide text area
         self.text_frame.pack_forget()
+
+        # Disable transparency for readable content
+        self.config(bg='#f5f5f5')
+        self.main_frame.config(bg='#f5f5f5')
 
         # Show settings
         self.settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -294,7 +316,17 @@ class FloatingPen(tk.Tk):
         """Hide all panels and return to icon view."""
         self.text_frame.pack_forget()
         self.settings_frame.pack_forget()
-        self.geometry("100x100")
+        self.geometry("80x80")
+
+        # Restore transparency
+        if sys.platform == "darwin":
+            self.config(bg='systemTransparent')
+            self.main_frame.config(bg='systemTransparent')
+            self.pen_label.config(bg='systemTransparent')
+        else:
+            self.config(bg=self.transparent_color)
+            self.main_frame.config(bg=self.transparent_color)
+            self.pen_label.config(bg=self.transparent_color)
 
 
 if __name__ == "__main__":
