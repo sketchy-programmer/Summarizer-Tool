@@ -30,8 +30,6 @@ class FloatingPen(tk.Tk):
 
         self.title("Shortify")
         self.geometry("80x80")
-        self.overrideredirect(True)
-        self.attributes("-topmost", True)
 
         # Settings
         self.action_type = "summarize"
@@ -44,29 +42,43 @@ class FloatingPen(tk.Tk):
         self.offset_x = 0
         self.offset_y = 0
 
-        # Transparent background
-        self.transparent_color = '#010101'
-        self.configure(bg=self.transparent_color)
+        # Store image reference
+        self.pen_photo = None
 
-        if sys.platform == "darwin":
-            self.attributes('-transparent', True)
-            self.config(bg='systemTransparent')
-            self.transparent_color = 'systemTransparent'
-        else:
-            self.attributes('-transparentcolor', self.transparent_color)
-
-        # Configure styles
+        # Configure styles first
         self.setup_styles()
 
-        # Main frame
-        self.main_frame = tk.Frame(self, bg=self.transparent_color)
+        # Main frame with normal background initially
+        self.main_frame = tk.Frame(self, bg='#f0f0f0')
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Setup UI
+        # Setup UI components
         self.setup_pen_icon()
         self.create_result_panel()
         self.create_settings_panel()
         self.create_menu()
+
+        # Apply transparency AFTER creating all widgets
+        self.after(100, self.apply_transparency)
+
+    def apply_transparency(self):
+        """Apply transparency after window is ready."""
+        self.overrideredirect(True)
+        self.attributes("-topmost", True)
+
+        if sys.platform == "darwin":
+            self.attributes('-transparent', True)
+            self.config(bg='systemTransparent')
+            self.main_frame.config(bg='systemTransparent')
+            if self.pen_label:
+                self.pen_label.config(bg='systemTransparent')
+        else:
+            self.transparent_color = '#010101'
+            self.config(bg=self.transparent_color)
+            self.main_frame.config(bg=self.transparent_color)
+            if self.pen_label:
+                self.pen_label.config(bg=self.transparent_color)
+            self.attributes('-transparentcolor', self.transparent_color)
 
     def setup_styles(self):
         """Configure ttk styles for modern look."""
@@ -118,16 +130,19 @@ class FloatingPen(tk.Tk):
         print(f"Looking for pen.png at: {image_path}")
         print(f"File exists: {os.path.exists(image_path)}")
 
+        # Use a normal background color initially (transparency applied later)
+        bg_color = '#f0f0f0'
+
         try:
             if os.path.exists(image_path):
                 self.pen_image = Image.open(image_path).convert("RGBA")
                 self.pen_image = self.pen_image.resize((70, 70), Image.Resampling.LANCZOS)
-                self.pen_photo = ImageTk.PhotoImage(self.pen_image)
+                self.pen_photo = ImageTk.PhotoImage(self.pen_image, master=self)
 
                 self.pen_label = tk.Label(
                     self.main_frame,
                     image=self.pen_photo,
-                    bg=self.transparent_color,
+                    bg=bg_color,
                     borderwidth=0,
                     highlightthickness=0,
                     cursor="hand2"
@@ -142,7 +157,7 @@ class FloatingPen(tk.Tk):
                 self.main_frame,
                 text="✏️",
                 font=('Arial', 40),
-                bg=self.transparent_color,
+                bg=bg_color,
                 cursor="hand2"
             )
 
@@ -511,14 +526,18 @@ class FloatingPen(tk.Tk):
         self.settings_frame.pack_forget()
         self.geometry("80x80")
 
+        # Restore transparency
         if sys.platform == "darwin":
             self.config(bg='systemTransparent')
             self.main_frame.config(bg='systemTransparent')
-            self.pen_label.config(bg='systemTransparent')
+            if self.pen_label:
+                self.pen_label.config(bg='systemTransparent')
         else:
-            self.config(bg=self.transparent_color)
-            self.main_frame.config(bg=self.transparent_color)
-            self.pen_label.config(bg=self.transparent_color)
+            transparent = getattr(self, 'transparent_color', '#010101')
+            self.config(bg=transparent)
+            self.main_frame.config(bg=transparent)
+            if self.pen_label:
+                self.pen_label.config(bg=transparent)
 
 
 if __name__ == "__main__":
