@@ -1,6 +1,5 @@
-import sys
-from gui import FloatingPen
+from gui import Shortify
 
 if __name__ == "__main__":
-    app = FloatingPen()
+    app = Shortify()
     app.mainloop()
